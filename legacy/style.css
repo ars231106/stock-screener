@@ -1,0 +1,1003 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+}
+
+body {
+  background-color: #f4f7fb;
+  color: #1e1e1e;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #ffffff;
+  padding: 1.2rem 4rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.logo {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.logo .green {
+  color: #00b300;
+}
+
+.logo .bar {
+  display: inline-block;
+  width: 8px;
+  height: 12px;
+  background: #00b300;
+  border-radius: 5px;
+}
+
+.logo .bar2 {
+  display: inline-block;
+  width: 8px;
+  height: 18px;
+  background: #00b300;
+  border-radius: 5px;
+}
+
+.logo .bar3 {
+  display: inline-block;
+  width: 8px;
+  height: 24px;
+  background: #00b300;
+  border-radius: 5px;
+}
+
+nav ul {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+}
+
+nav ul li a {
+  text-decoration: none;
+  color: #444;
+  font-weight: 500;
+}
+
+.auth-buttons button {
+  margin-left: 1rem;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.login-btn {
+  background-color: #fff;
+  color: #333;
+  border: 1px solid #ccc;
+}
+
+.signup-btn {
+  background-color: #7b5eff;
+  color: #fff;
+}
+
+.hero {
+  padding: 6rem 2rem 2rem;
+  text-align: center;
+}
+
+.hero h2 {
+  font-size: 1.4rem;
+  font-weight: 500;
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+.search-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.search-container input {
+  width: 60%;
+  padding: 1rem 1.2rem;
+  font-size: 1.1rem;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background-color: #fff;
+}
+
+#searchBtn {
+  padding: 10px 20px;
+  background-color: #625bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+#searchBtn:hover {
+  background-color: #4d46d3;
+}
+
+.popular-tags {
+  margin-top: 1.8rem;
+  font-size: 1rem;
+  color: #555;
+}
+
+.tag-list {
+  margin-top: 0.5rem;
+}
+
+.tag-list button {
+  background-color: #eaeef7;
+  color: #333;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  margin: 5px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.tag-list button:hover {
+  background-color: #d4dffa;
+}
+
+.metrics-section {
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.metrics-section h2 {
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+  color: #222;
+}
+
+.metrics-card {
+  max-width: 500px;
+  margin: 0 auto;
+  text-align: left;
+  background-color: #ffffff;
+  padding: 1.5rem;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+
+.metrics-card p {
+  margin: 0.6rem 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 3rem 4rem;
+  background-color: #ffffff;
+  border-top: 1px solid #ddd;
+  margin-top: 4rem;
+}
+
+.footer-left {
+  max-width: 40%;
+}
+
+.footer-logo {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.4rem;
+}
+
+.footer-left p {
+  font-size: 0.9rem;
+  color: #555;
+  margin: 0.4rem 0;
+}
+
+.footer-right {
+  display: flex;
+  gap: 4rem;
+}
+
+.footer-right h4 {
+  font-size: 1rem;
+  color: #222;
+  margin-bottom: 0.6rem;
+}
+
+.footer-right p {
+  font-size: 0.9rem;
+  color: #555;
+  margin: 0.3rem 0;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 100;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background: #fff;
+  margin: 10% auto;
+  padding: 20px;
+  width: 300px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.modal-content input {
+  width: 90%;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+.modal-content button {
+  padding: 10px 20px;
+  background-color: #2ecc71;
+  border: none;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close {
+  float: right;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    padding: 1rem;
+  }
+
+  nav ul {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .search-container input {
+    width: 90%;
+  }
+
+  .metrics-card {
+    margin: 1rem auto;
+  }
+
+  footer {
+    flex-direction: column;
+    gap: 2rem;
+    padding: 2rem;
+  }
+
+  .footer-right {
+    flex-direction: column;
+    gap: 2rem;
+  }
+}
+
+button {
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+button:hover {
+  transform: scale(1.03);
+}
+
+body.dark-mode {
+  background-color: #1e1e1e;
+  color: #f4f4f4;
+}
+
+body.dark-mode .navbar,
+body.dark-mode .metrics-card,
+body.dark-mode footer {
+  background-color: #2c2c2c;
+  border-color: #444;
+}
+
+button:focus,
+a:focus {
+  outline: 2px solid #625bff;
+  outline-offset: 3px;
+}
+
+/* ===== Stock Data Display ===== */
+.metrics-card {
+  max-width: 500px;
+  margin: 0 auto;
+  text-align: left;
+  background-color: #ffffff;
+  padding: 1.5rem;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  position: relative;
+}
+
+.stock-title {
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+  color: #222;
+}
+
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  align-items: center;
+}
+
+.current-price {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.positive-change {
+  color: green;
+  font-weight: bold;
+}
+
+.negative-change {
+  color: red;
+  font-weight: bold;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.metrics-grid p {
+  margin: 0.6rem 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+.last-updated {
+  margin-top: 15px;
+  font-size: 0.8rem;
+  text-align: right;
+  color: #666;
+}
+
+.refresh-btn {
+  margin-top: 10px;
+  padding: 5px 10px;
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.refresh-btn:hover {
+  background-color: #e0e0e0;
+}
+
+/* ===== Status Messages ===== */
+.loading-container {
+  text-align: center;
+  padding: 20px;
+}
+
+.error-message {
+  color: #d32f2f;
+  text-align: center;
+  padding: 10px;
+}
+
+.api-limit-message {
+  color: #f57c00;
+  text-align: center;
+  padding: 10px;
+}
+
+.no-results-message {
+  color: #555;
+  text-align: center;
+  padding: 10px;
+}
+
+/* ===== Refresh Indicator ===== */
+.refresh-indicator {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 5px;
+  background-color: rgba(0,0,0,0.1);
+  border-radius: 3px;
+  font-size: 12px;
+  animation: fadeOut 2s ease;
+}
+
+@keyframes fadeOut {
+  0% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ===== User Welcome ===== */
+.welcome-user {
+  margin-right: 10px;
+  color: #333;
+  font-weight: bold;
+}
+
+/* ===== Logged In State ===== */
+.user-panel {
+  display: flex;
+  align-items: center;
+}
+
+/* ===== Dark Mode Compatibility ===== */
+body.dark-mode .metrics-card {
+  background-color: #2c2c2c;
+  border-color: #444;
+}
+
+body.dark-mode .metrics-grid p,
+body.dark-mode .stock-title {
+  color: #f4f4f4;
+}
+
+body.dark-mode .last-updated {
+  color: #aaa;
+}
+
+body.dark-mode .refresh-btn {
+  background-color: #333;
+  border-color: #555;
+  color: #f4f4f4;
+}
+
+body.dark-mode .refresh-btn:hover {
+  background-color: #444;
+}
+
+body.dark-mode .positive-change {
+  color: #4cd964;
+}
+
+body.dark-mode .negative-change {
+  color: #ff3b30;
+}
+
+/* ===== Responsive Adjustments ===== */
+@media (max-width: 480px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .price-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+}
+
+.footer-right p {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.footer-right p:hover {
+  color: #00b300;
+}
+
+body.dark-mode .footer-right h4,
+body.dark-mode .footer-left p,
+body.dark-mode .footer-logo,
+body.dark-mode .footer-right p {
+  color: #f4f4f4;
+}
+
+body.dark-mode .footer-right p:hover {
+  color: #4cd964;
+}
+
+@media (max-width: 480px) {
+  .footer-left,
+  .footer-right {
+    text-align: center;
+    max-width: 100%;
+  }
+
+  .footer-right {
+    gap: 1.5rem;
+  }
+}
+
+.footer-logo {
+  font-size: 1.8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Theme toggle button styling */
+#light-theme, #dark-theme {
+  padding: 6px 12px;
+  margin: 0 5px;
+  cursor: pointer;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.active-theme {
+  background-color: #007bff !important;
+  color: white !important;
+  border-color: #0056b3 !important;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+/* Dark theme specific adjustments */
+.dark-theme {
+  background-color: #121212;
+  color: #e0e0e0;
+}
+
+.dark-theme .metrics-card,
+.dark-theme .footer,
+.dark-theme #authModal .modal-content {
+  background-color: #1e1e1e;
+  border-color: #333;
+  color: #e0e0e0;
+}
+
+.dark-theme input[type="text"],
+.dark-theme input[type="password"] {
+  background-color: #333;
+  color: #e0e0e0;
+  border-color: #555;
+}
+
+.dark-theme .tag-list button {
+  background-color: #333;
+  color: #e0e0e0;
+}
+
+.dark-theme .tag-list button:hover {
+  background-color: #444;
+}
+
+.dark-theme .search-btn,
+.dark-theme .login-btn,
+.dark-theme .signup-btn,
+.dark-theme .refresh-btn {
+  border-color: #555;
+}
+
+/* Enhanced Dark Theme Text Colors */
+.dark-theme {
+  background-color: #121212;
+  color: #e0e0e0;  /* Base text color for the entire body */
+}
+
+/* Make sure all text elements change color in dark mode */
+.dark-theme h1,
+.dark-theme h2,
+.dark-theme h3,
+.dark-theme h4,
+.dark-theme h5,
+.dark-theme h6,
+.dark-theme p,
+.dark-theme span,
+.dark-theme label,
+.dark-theme a,
+.dark-theme button,
+.dark-theme div,
+.dark-theme li,
+.dark-theme strong {
+  color: #e0e0e0;
+}
+
+/* Specific styling for various components */
+.dark-theme .metrics-card,
+.dark-theme .footer,
+.dark-theme #authModal .modal-content,
+.dark-theme #footer-modal .modal-content {
+  background-color: #1e1e1e;
+  border-color: #333;
+  color: #e0e0e0;
+}
+
+/* Make sure form inputs have proper colors */
+.dark-theme input[type="text"],
+.dark-theme input[type="password"],
+.dark-theme input[type="email"],
+.dark-theme select,
+.dark-theme textarea {
+  background-color: #333;
+  color: #e0e0e0;
+  border-color: #555;
+}
+
+/* Keep stock change colors distinct */
+.dark-theme .positive-change {
+  color: #4caf50; /* Brighter green for dark mode */
+}
+
+.dark-theme .negative-change {
+  color: #f44336; /* Brighter red for dark mode */
+}
+
+/* Header elements */
+.dark-theme header {
+  background-color: #1e1e1e;
+  border-bottom-color: #333;
+}
+
+/* Modal elements */
+.dark-theme .modal-header,
+.dark-theme .modal-footer {
+  border-color: #444;
+}
+
+/* Links styling */
+.dark-theme a {
+  color: #64b5f6; /* Light blue for better visibility */
+}
+
+.dark-theme a:hover {
+  color: #90caf9;
+}
+
+/* Popular tags */
+.dark-theme .tag-list button {
+  background-color: #333;
+  color: #e0e0e0;
+}
+
+.dark-theme .tag-list button:hover {
+  background-color: #444;
+}
+
+/* Buttons */
+.dark-theme .search-btn,
+.dark-theme .login-btn,
+.dark-theme .signup-btn,
+.dark-theme .refresh-btn,
+.dark-theme #submitAuth,
+.dark-theme button {
+  background-color: #424242;
+  border-color: #555;
+  color: #e0e0e0;
+}
+
+.dark-theme .search-btn:hover,
+.dark-theme .login-btn:hover,
+.dark-theme .signup-btn:hover,
+.dark-theme .refresh-btn:hover,
+.dark-theme #submitAuth:hover,
+.dark-theme button:hover {
+  background-color: #555;
+}
+
+/* For error and info messages */
+.dark-theme .error-message,
+.dark-theme .api-limit-message,
+.dark-theme .no-results-message {
+  color: #ff6e6e; /* Lighter red for error messages */
+}
+
+/* Last updated text */
+.dark-theme .last-updated {
+  color: #a0a0a0; /* Slightly dimmed text */
+}
+
+/* Preserve some specific colors that should remain constant */
+.dark-theme .current-price {
+  color: #e0e0e0;
+}
+
+/* For any code blocks or preformatted text */
+.dark-theme pre,
+.dark-theme code {
+  background-color: #333;
+  color: #e0e0e0;
+  border-color: #555;
+}
+
+/* Footer Dark Theme Fix */
+.dark-theme footer {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  border-top: 1px solid #333;
+}
+
+/* Footer sections in dark mode */
+.dark-theme .footer-left,
+.dark-theme .footer-right {
+  color: #e0e0e0;
+}
+
+.dark-theme .footer-logo {
+  color: #e0e0e0;
+}
+
+.dark-theme .footer-logo .green {
+  color: #4cd964; /* Keep the green color for the logo */
+}
+
+.dark-theme .footer-left p,
+.dark-theme .footer-right p {
+  color: #e0e0e0;
+}
+
+.dark-theme .footer-right h4 {
+  color: #e0e0e0;
+}
+
+/* Footer modal */
+.dark-theme #footer-modal .modal-content {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  border: 1px solid #444;
+}
+
+.dark-theme #footer-modal .modal-header {
+  border-bottom-color: #444;
+}
+
+.dark-theme #footer-modal .modal-close {
+  color: #aaa;
+}
+
+.dark-theme #footer-modal .modal-close:hover {
+  color: #fff;
+}
+
+/* Ensure footer text contrast */
+.dark-theme footer button {
+  background-color: #333;
+  color: #e0e0e0;
+  border-color: #555;
+}
+
+.dark-theme footer button:hover {
+  background-color: #444;
+}
+
+/* Override any existing dark mode styles for footer */
+body.dark-mode footer,
+.dark-theme footer {
+  background-color: #1e1e1e !important;
+  color: #e0e0e0 !important;
+}
+
+/* Remove any existing conflicting styles */
+body.dark-mode .footer-left p,
+body.dark-mode .footer-right p,
+body.dark-mode .footer-logo,
+body.dark-mode .footer-right h4 {
+  color: #e0e0e0 !important;
+}
+
+/* Nav bar active state */
+nav ul li a.active-nav {
+  color: #00b300;
+  font-weight: 700;
+  position: relative;
+}
+
+nav ul li a.active-nav::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #00b300;
+}
+
+/* Content sections styling */
+.content-section {
+  padding: 3rem 2rem;
+}
+
+.content-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.content-section h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  color: #333;
+  text-align: center;
+}
+
+.content-section > p {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #666;
+}
+
+/* Screener cards styling */
+.screener-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.screener-card {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.screener-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+.screener-card h3 {
+  font-size: 1.2rem;
+  margin-bottom: 0.8rem;
+  color: #333;
+}
+
+.screener-card p {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.screener-card ul {
+  list-style-type: none;
+  padding-left: 0;
+  margin-bottom: 1.2rem;
+}
+
+.screener-card ul li {
+  font-size: 0.9rem;
+  color: #555;
+  padding: 0.3rem 0;
+  position: relative;
+  padding-left: 1.2rem;
+}
+
+.screener-card ul li::before {
+  content: "•";
+  color: #00b300;
+  font-size: 1.2rem;
+  position: absolute;
+  left: 0;
+  top: 0.1rem;
+}
+
+.view-stocks-btn, .custom-screen-btn, .tool-btn {
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 5px;
+  background-color: #625bff;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  width: 100%;
+}
+
+.view-stocks-btn:hover, .custom-screen-btn:hover, .tool-btn:hover {
+  background-color: #4d46d3;
+}
+
+.custom-screen-btn {
+  background-color: #00b300;
+}
+
+.custom-screen-btn:hover {
+  background-color: #009900;
+}
+
+/* Tools cards styling */
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.tool-card {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 180px;
+}
+
+.tool-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+.tool-card h3 {
+  font-size: 1.2rem;
+  margin-bottom: 0.8rem;
+  color: #333;
+}
+
+.tool-card p {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 1rem;
+  flex-grow: 1;
+}
+
+/* Dark theme compatibility */
+.dark-theme .content-section h2,
+.dark-theme .screener-card h3,
+.dark-theme .tool-card h3 {
+  color: #e0e0e0;
+}
+
+.dark-theme .content-section > p,
+.dark-theme .screener-card p,
+.dark-theme .tool-card p {
+  color: #bbb;
+}
+
+.dark-theme .screener-card ul li {
+  color: #ccc;
+}
+
+.dark-theme .screener-card,
+.dark-theme .tool-card {
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+}
+
+.dark-theme nav ul li a.active-nav {
+  color: #4cd964;
+}
+
+.dark-theme nav ul li a.active-nav::after {
+  background-color: #4cd964;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .screener-grid,
+  .tools-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .content-section {
+    padding: 2rem 1rem;
+  }
+}
