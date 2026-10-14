@@ -6,12 +6,17 @@ from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.core.supabase_client import get_supabase
+from app.providers.registry import get_provider_chain
 from app.routers import screens, stocks, users, watchlist
 
 logging.basicConfig(
     level=logging.DEBUG if settings.debug else logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
 )
+# httpx logs every outbound request at INFO, including the full query
+# string -- which puts provider API keys straight into the service logs.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
 log = logging.getLogger(__name__)
 
 app = FastAPI(
@@ -72,6 +77,6 @@ async def health():
             "supabase_configured": settings.is_configured,
             "supabase_reachable": supabase_ok,
             "jwt_secret_set": bool(settings.supabase_jwt_secret),
-            "market_data_key_set": settings.alpha_vantage_key not in ("", "demo"),
+            "market_data_providers": [p.name for p in get_provider_chain()],
         },
     )
