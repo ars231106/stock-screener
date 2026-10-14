@@ -22,8 +22,13 @@ class Settings(BaseSettings):
     supabase_jwt_secret: str = ""       # used to verify user access tokens
     supabase_anon_key: str = ""
 
-    # --- Market data provider ---
-    alpha_vantage_key: str = "demo"
+    # --- Market data providers ---
+    # Comma-separated, in priority order. The first entry serves requests;
+    # later entries are tried only when an earlier one is rate-limited or
+    # unreachable. e.g. "yahoo,alpha_vantage"
+    market_data_providers: str = "yahoo,alpha_vantage"
+
+    alpha_vantage_key: str = ""
     alpha_vantage_base: str = "https://www.alphavantage.co/query"
 
     # Seconds a quote stays fresh in the shared cache before we hit the
@@ -31,11 +36,16 @@ class Settings(BaseSettings):
     # keep this generous.
     quote_cache_ttl: int = 300
     search_cache_ttl: int = 86400
+    overview_cache_ttl: int = 86400
 
     # --- CORS ---
     # Comma-separated list, e.g.
     # "http://localhost:3000,https://stock-screener.vercel.app"
     cors_origins: str = "http://localhost:3000"
+
+    @property
+    def provider_list(self) -> List[str]:
+        return [p.strip() for p in self.market_data_providers.split(",") if p.strip()]
 
     @property
     def cors_origin_list(self) -> List[str]:
