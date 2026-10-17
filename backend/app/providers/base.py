@@ -10,7 +10,7 @@ schemas are stable regardless of which upstream answered.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 
 class ProviderError(Exception):
@@ -36,19 +36,19 @@ class MarketDataProvider(Protocol):
 
     name: str
 
-    async def search(self, query: str) -> List[Dict[str, Any]]:
+    async def search(self, query: str) -> list[dict[str, Any]]:
         """Companies matching a name or ticker fragment."""
         ...
 
-    async def quote(self, symbol: str) -> Dict[str, Any]:
+    async def quote(self, symbol: str) -> dict[str, Any]:
         """Latest price snapshot for one ticker."""
         ...
 
-    async def overview(self, symbol: str) -> Dict[str, Any]:
+    async def overview(self, symbol: str) -> dict[str, Any]:
         """Company fundamentals for one ticker."""
         ...
 
-    async def history(self, symbol: str, range_: str) -> Dict[str, Any]:
+    async def history(self, symbol: str, range_: str) -> dict[str, Any]:
         """OHLCV candles for one ticker over a named range."""
         ...
 

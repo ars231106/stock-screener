@@ -16,9 +16,10 @@ pushed to a worker thread to avoid stalling the event loop.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+from typing import Any
 
 import httpx
 
@@ -64,7 +65,7 @@ class YahooProvider:
     name = "yahoo"
 
     # ---------------------------------------------------------------- search
-    async def search(self, query: str) -> List[Dict[str, Any]]:
+    async def search(self, query: str) -> list[dict[str, Any]]:
         try:
             async with httpx.AsyncClient(timeout=20.0, headers=HEADERS) as client:
                 resp = await client.get(
@@ -84,7 +85,7 @@ class YahooProvider:
         except ValueError as exc:
             raise ProviderError("Yahoo search returned a non-JSON response") from exc
 
-        matches: List[Dict[str, Any]] = []
+        matches: list[dict[str, Any]] = []
         for i, q in enumerate(payload.get("quotes", [])):
             symbol = q.get("symbol")
             # Equities and funds only -- futures and options are noise here.
@@ -105,8 +106,8 @@ class YahooProvider:
         return matches
 
     # ----------------------------------------------------------------- quote
-    async def quote(self, symbol: str) -> Dict[str, Any]:
-        def _fetch() -> Dict[str, Any]:
+    async def quote(self, symbol: str) -> dict[str, Any]:
+        def _fetch() -> dict[str, Any]:
             import yfinance as yf
 
             ticker = yf.Ticker(symbol)
@@ -148,8 +149,8 @@ class YahooProvider:
         return await self._in_thread(_fetch, symbol)
 
     # -------------------------------------------------------------- overview
-    async def overview(self, symbol: str) -> Dict[str, Any]:
-        def _fetch() -> Dict[str, Any]:
+    async def overview(self, symbol: str) -> dict[str, Any]:
+        def _fetch() -> dict[str, Any]:
             import yfinance as yf
 
             info = yf.Ticker(symbol).info or {}
@@ -213,10 +214,10 @@ class YahooProvider:
         "max": ("max", "1mo"),
     }
 
-    async def history(self, symbol: str, range_: str = "1y") -> Dict[str, Any]:
+    async def history(self, symbol: str, range_: str = "1y") -> dict[str, Any]:
         period, interval = self.RANGES.get(range_, self.RANGES["1y"])
 
-        def _fetch() -> Dict[str, Any]:
+        def _fetch() -> dict[str, Any]:
             import yfinance as yf
 
             ticker = yf.Ticker(symbol)
@@ -227,15 +228,13 @@ class YahooProvider:
                 raise ProviderError(f"No price history available for {symbol}")
 
             currency = None
-            try:
+            with contextlib.suppress(Exception):
                 currency = ticker.fast_info.get("currency")
-            except Exception:
-                pass
 
             candles = []
             for ts, row in frame.iterrows():
-                def num(col):
-                    v = row.get(col)
+                def num(col, _row=row):
+                    v = _row.get(col)
                     try:
                         f = float(v)
                     except (TypeError, ValueError):
@@ -271,7 +270,7 @@ class YahooProvider:
 
     # ----------------------------------------------------------------- utils
     @staticmethod
-    async def _in_thread(fn, symbol: str) -> Dict[str, Any]:
+    async def _in_thread(fn, symbol: str) -> dict[str, Any]:
         """Run a blocking yfinance call off the event loop.
 
         Yahoo signals throttling with a 429 buried inside yfinance's own

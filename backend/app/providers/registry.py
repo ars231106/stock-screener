@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import logging
 from functools import lru_cache
-from typing import List
 
 from app.core.config import settings
 from app.providers.alpha_vantage import AlphaVantageProvider
@@ -35,7 +34,7 @@ def _build(name: str) -> MarketDataProvider | None:
 
 
 @lru_cache
-def get_provider_chain() -> List[MarketDataProvider]:
+def get_provider_chain() -> list[MarketDataProvider]:
     """Providers in priority order, built once per process."""
     chain = [p for p in (_build(n) for n in settings.provider_list) if p is not None]
     if not chain:

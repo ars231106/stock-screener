@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+from typing import Any
 
 import httpx
 
@@ -33,7 +33,7 @@ class AlphaVantageProvider:
         self.api_key = api_key
         self.base_url = base_url
 
-    async def _call(self, params: Dict[str, str]) -> Dict[str, Any]:
+    async def _call(self, params: dict[str, str]) -> dict[str, Any]:
         if not self.api_key:
             raise ProviderError("Alpha Vantage key is not configured")
 
@@ -60,7 +60,7 @@ class AlphaVantageProvider:
             raise ProviderError(data["Error Message"])
         return data
 
-    async def search(self, query: str) -> List[Dict[str, Any]]:
+    async def search(self, query: str) -> list[dict[str, Any]]:
         raw = await self._call({"function": "SYMBOL_SEARCH", "keywords": query})
         return [
             {
@@ -75,7 +75,7 @@ class AlphaVantageProvider:
             if m.get("1. symbol")
         ]
 
-    async def quote(self, symbol: str) -> Dict[str, Any]:
+    async def quote(self, symbol: str) -> dict[str, Any]:
         raw = await self._call({"function": "GLOBAL_QUOTE", "symbol": symbol})
         q = raw.get("Global Quote") or {}
         if not q.get("01. symbol"):
@@ -96,7 +96,7 @@ class AlphaVantageProvider:
             "fetched_at": datetime.now(timezone.utc).isoformat(),
         }
 
-    async def overview(self, symbol: str) -> Dict[str, Any]:
+    async def overview(self, symbol: str) -> dict[str, Any]:
         raw = await self._call({"function": "OVERVIEW", "symbol": symbol})
         if not raw or not raw.get("Symbol"):
             raise ProviderError(f"No fundamentals available for {symbol}")
@@ -131,7 +131,7 @@ class AlphaVantageProvider:
             "fetched_at": datetime.now(timezone.utc).isoformat(),
         }
 
-    async def history(self, symbol: str, range_: str = "1y") -> Dict[str, Any]:
+    async def history(self, symbol: str, range_: str = "1y") -> dict[str, Any]:
         # TIME_SERIES_DAILY_ADJUSTED is a premium endpoint on this provider,
         # so there is nothing useful to fall back to here. Raising the
         # specific error keeps the chain from retrying pointlessly.
