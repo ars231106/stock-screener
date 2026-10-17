@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from app.core.security import CurrentUser, get_optional_user
 from app.core.supabase_client import get_supabase
 from app.schemas import Overview, Quote, SearchResponse, StockDetail
-from app.services import market_data
+from app.services import fundamentals, market_data
 from app.services.market_data import MarketDataError, RateLimitError
 
 log = logging.getLogger(__name__)
@@ -100,12 +100,11 @@ async def detail(
     except MarketDataError as exc:
         raise _upstream_error(exc)
 
-    # Fundamentals are optional — many tickers (and the demo key) have none.
-    overview_data = None
-    try:
-        overview_data = await market_data.get_overview(sym)
-    except MarketDataError as exc:
-        log.info("no fundamentals for %s: %s", sym, exc)
+    # Fundamentals come from the stored table, which the scheduled refresh
+    # job populates. The API server cannot fetch them live on Render --
+    # Yahoo blocks its fundamentals endpoint from that IP range -- so the
+    # stored read is the only path that works in production.
+    overview_data = await fundamentals.get_overview(sym)
 
     currency = (overview_data or {}).get("currency")
     name = (overview_data or {}).get("name")
