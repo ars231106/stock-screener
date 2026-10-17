@@ -33,6 +33,7 @@ __all__ = [
     "MarketDataError",
     "RateLimitError",
     "currency_symbol",
+    "get_history",
     "get_overview",
     "get_quote",
     "search_symbols",
@@ -204,3 +205,60 @@ async def get_overview(symbol: str) -> Dict[str, Any]:
 
     _cache_put("quote_cache", "symbol", cache_key, overview)
     return {**overview, "cached": False}
+
+
+def _sma(values: List[Optional[float]], window: int) -> List[Optional[float]]:
+    """Simple moving average, returned index-aligned with `values`.
+
+    Entries before the window is full are None rather than a partial average,
+    so a 200-day line does not start with a meaningless 3-day mean.
+    """
+    out: List[Optional[float]] = []
+    running = 0.0
+    buf: List[float] = []
+    for v in values:
+        if v is None:
+            out.append(None)
+            continue
+        buf.append(v)
+        running += v
+        if len(buf) > window:
+            running -= buf.pop(0)
+        out.append(running / window if len(buf) == window else None)
+    return out
+
+
+async def get_history(symbol: str, range_: str = "1y") -> Dict[str, Any]:
+    """Price history plus moving averages, cached per symbol+range.
+
+    The TTL is short for intraday-relevant ranges and long for multi-year
+    ones: a 10-year monthly series does not change during the day.
+    """
+    key = symbol.strip().upper()
+    if not key:
+        raise ProviderError("Symbol is required")
+
+    cache_key = f"history:{key}:{range_}"
+    ttl = 900 if range_ in ("1m", "6m", "1y") else 86400
+
+    cached = _cache_get("quote_cache", "symbol", cache_key, ttl)
+    if cached is not None:
+        return {**cached, "cached": True}
+
+    try:
+        data = await _try_providers(
+            lambda p: p.history(key, range_), f"history:{key}:{range_}"
+        )
+    except ProviderError:
+        stale = _cache_get_stale("quote_cache", "symbol", cache_key)
+        if stale is not None:
+            return {**stale, "cached": True}
+        raise
+
+    closes = [c.get("c") for c in data.get("candles", [])]
+    data["sma_50"] = _sma(closes, 50)
+    data["sma_200"] = _sma(closes, 200)
+    data["currency_symbol"] = currency_symbol(data.get("currency"))
+
+    _cache_put("quote_cache", "symbol", cache_key, data)
+    return {**data, "cached": False}

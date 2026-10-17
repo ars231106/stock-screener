@@ -48,6 +48,10 @@ class MarketDataProvider(Protocol):
         """Company fundamentals for one ticker."""
         ...
 
+    async def history(self, symbol: str, range_: str) -> Dict[str, Any]:
+        """OHLCV candles for one ticker over a named range."""
+        ...
+
 
 # --------------------------------------------------------------------------
 # Normalisation helpers shared by every provider

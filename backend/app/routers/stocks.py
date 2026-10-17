@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.core.security import CurrentUser, get_optional_user
 from app.core.supabase_client import get_supabase
-from app.schemas import Overview, Quote, SearchResponse, StockDetail
+from app.schemas import Overview, PriceHistory, Quote, SearchResponse, StockDetail
 from app.services import fundamentals, market_data
 from app.services.market_data import MarketDataError, RateLimitError
 
@@ -81,6 +81,22 @@ async def overview(symbol: str):
     """Company fundamentals for a ticker."""
     try:
         return await market_data.get_overview(symbol)
+    except MarketDataError as exc:
+        raise _upstream_error(exc)
+
+
+@router.get("/{symbol}/history", response_model=PriceHistory)
+async def history(
+    symbol: str,
+    range: str = Query(
+        "1y",
+        pattern="^(1m|6m|1y|3y|5y|10y|max)$",
+        description="1m, 6m, 1y, 3y, 5y, 10y or max",
+    ),
+):
+    """OHLCV candles plus 50- and 200-period moving averages."""
+    try:
+        return await market_data.get_history(symbol, range)
     except MarketDataError as exc:
         raise _upstream_error(exc)
 

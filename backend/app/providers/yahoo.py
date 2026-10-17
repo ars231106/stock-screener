@@ -199,6 +199,76 @@ class YahooProvider:
 
         return await self._in_thread(_fetch, symbol)
 
+    # --------------------------------------------------------------- history
+    # Range -> (yfinance period, interval). Longer ranges use coarser bars so
+    # the payload stays small and the line stays readable: a 10-year daily
+    # series is ~2500 points for maybe 900 pixels of width.
+    RANGES = {
+        "1m": ("1mo", "1d"),
+        "6m": ("6mo", "1d"),
+        "1y": ("1y", "1d"),
+        "3y": ("3y", "1wk"),
+        "5y": ("5y", "1wk"),
+        "10y": ("10y", "1mo"),
+        "max": ("max", "1mo"),
+    }
+
+    async def history(self, symbol: str, range_: str = "1y") -> Dict[str, Any]:
+        period, interval = self.RANGES.get(range_, self.RANGES["1y"])
+
+        def _fetch() -> Dict[str, Any]:
+            import yfinance as yf
+
+            ticker = yf.Ticker(symbol)
+            # auto_adjust keeps splits/dividends from putting false cliffs in
+            # the line -- without it a 1:5 split reads as an 80% crash.
+            frame = ticker.history(period=period, interval=interval, auto_adjust=True)
+            if frame is None or frame.empty:
+                raise ProviderError(f"No price history available for {symbol}")
+
+            currency = None
+            try:
+                currency = ticker.fast_info.get("currency")
+            except Exception:
+                pass
+
+            candles = []
+            for ts, row in frame.iterrows():
+                def num(col):
+                    v = row.get(col)
+                    try:
+                        f = float(v)
+                    except (TypeError, ValueError):
+                        return None
+                    return None if f != f else f
+
+                close = num("Close")
+                if close is None:
+                    continue  # a bar with no close cannot be plotted
+                candles.append(
+                    {
+                        "t": ts.strftime("%Y-%m-%d"),
+                        "o": num("Open"),
+                        "h": num("High"),
+                        "l": num("Low"),
+                        "c": close,
+                        "v": int(num("Volume") or 0),
+                    }
+                )
+
+            if not candles:
+                raise ProviderError(f"No usable price history for {symbol}")
+
+            return {
+                "symbol": symbol.upper(),
+                "currency": currency,
+                "range": range_,
+                "interval": interval,
+                "candles": candles,
+            }
+
+        return await self._in_thread(_fetch, symbol)
+
     # ----------------------------------------------------------------- utils
     @staticmethod
     async def _in_thread(fn, symbol: str) -> Dict[str, Any]:

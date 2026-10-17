@@ -15,7 +15,13 @@ from typing import Any, Dict, List
 
 import httpx
 
-from app.providers.base import ProviderError, RateLimitError, to_float, to_int
+from app.providers.base import (
+    NotSupportedError,
+    ProviderError,
+    RateLimitError,
+    to_float,
+    to_int,
+)
 
 log = logging.getLogger(__name__)
 
@@ -124,3 +130,11 @@ class AlphaVantageProvider:
             "week_52_low": to_float(raw.get("52WeekLow")),
             "fetched_at": datetime.now(timezone.utc).isoformat(),
         }
+
+    async def history(self, symbol: str, range_: str = "1y") -> Dict[str, Any]:
+        # TIME_SERIES_DAILY_ADJUSTED is a premium endpoint on this provider,
+        # so there is nothing useful to fall back to here. Raising the
+        # specific error keeps the chain from retrying pointlessly.
+        raise NotSupportedError(
+            "Alpha Vantage's free tier does not serve adjusted price history"
+        )
