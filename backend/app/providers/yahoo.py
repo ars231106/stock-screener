@@ -128,7 +128,7 @@ class YahooProvider:
             change_percent = ""
             if price is not None and previous_close:
                 change = price - previous_close
-                change_percent = f"{(change / previous_close) * 100:.4f}%"
+                change_percent = f"{(change / previous_close) * 100:.2f}%"
 
             return {
                 "symbol": symbol.upper(),

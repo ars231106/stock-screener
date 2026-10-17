@@ -18,6 +18,9 @@ const RANGES: { key: HistoryRange; label: string }[] = [
 // Layout. Heights are fixed; width is measured, because an SVG stretched with
 // preserveAspectRatio would distort stroke widths and text.
 const PRICE_H = 248;
+// Headroom so the topmost gridline label has room to sit above its line
+// instead of being clipped by the SVG edge.
+const PAD_T = 10;
 const VOL_H = 54;
 const GAP = 10;
 const AXIS_H = 22;
@@ -118,7 +121,8 @@ export default function PriceChart({ symbol, currencySymbol = "" }: Props) {
     const maxVol = Math.max(...candles.map((c) => c.v || 0), 1);
     const n = candles.length;
     const x = (i: number) => PAD_L + (n === 1 ? plotW / 2 : (i / (n - 1)) * plotW);
-    const y = (v: number) => PRICE_H - ((v - lo) / (hi - lo)) * PRICE_H;
+    const y = (v: number) =>
+      PRICE_H - ((v - lo) / (hi - lo)) * (PRICE_H - PAD_T);
     const vy = (v: number) => VOL_H - (v / maxVol) * VOL_H;
 
     const line = (series: (number | null)[]) => {
