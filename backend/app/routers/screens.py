@@ -31,7 +31,8 @@ async def list_metrics():
             {"key": "eq", "label": "equals"},
             {"key": "between", "label": "between"},
         ],
-        "universe_size": len(screener.UNIVERSE),
+        "universe_size": screener.universe_size(),
+        "coverage": screener.coverage(),
     }
 
 
