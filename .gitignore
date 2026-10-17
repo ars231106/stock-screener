@@ -22,3 +22,11 @@ Thumbs.db
 # Scratch
 .dist/
 Claude outputs/
+
+# mypy
+.mypy_cache/
+backend/.mypy_cache/
+.pytest_cache/
+backend/.pytest_cache/
+.coverage
+htmlcov/

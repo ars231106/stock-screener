@@ -6,7 +6,6 @@ taken from a *verified* JWT, never from client input.
 """
 
 from functools import lru_cache
-from typing import Optional
 
 from supabase import Client, create_client
 
@@ -14,7 +13,7 @@ from app.core.config import settings
 
 
 @lru_cache
-def get_supabase() -> Optional[Client]:
+def get_supabase() -> Client | None:
     if not settings.is_configured:
         return None
     return create_client(settings.supabase_url, settings.supabase_service_key)

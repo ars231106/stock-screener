@@ -1,5 +1,4 @@
 from functools import lru_cache
-from typing import List
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -44,11 +43,11 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
 
     @property
-    def provider_list(self) -> List[str]:
+    def provider_list(self) -> list[str]:
         return [p.strip() for p in self.market_data_providers.split(",") if p.strip()]
 
     @property
-    def cors_origin_list(self) -> List[str]:
+    def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
     @property

@@ -26,7 +26,7 @@ import logging
 import os
 import sys
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List
+from typing import Any
 
 # Allow `python jobs/refresh_fundamentals.py` as well as `-m`.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -62,7 +62,7 @@ def seed_universe() -> int:
     return len(rows)
 
 
-def symbols_to_refresh(refresh_all: bool, max_age_hours: int, limit: int | None) -> List[str]:
+def symbols_to_refresh(refresh_all: bool, max_age_hours: int, limit: int | None) -> list[str]:
     sb = require_supabase()
     universe = (
         sb.table("universe").select("symbol").eq("active", True).execute().data or []
@@ -88,7 +88,7 @@ def symbols_to_refresh(refresh_all: bool, max_age_hours: int, limit: int | None)
     return stale[:limit] if limit else stale
 
 
-async def fetch_one(symbol: str, sem: asyncio.Semaphore) -> Dict[str, Any] | None:
+async def fetch_one(symbol: str, sem: asyncio.Semaphore) -> dict[str, Any] | None:
     async with sem:
         try:
             overview = await market_data.get_overview(symbol)

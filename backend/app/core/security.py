@@ -6,7 +6,6 @@ signature locally with the project's JWT secret — no network round-trip
 per request.
 """
 
-from typing import Optional
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -18,7 +17,7 @@ bearer_scheme = HTTPBearer(auto_error=False)
 
 
 class CurrentUser:
-    def __init__(self, user_id: str, email: Optional[str], claims: dict):
+    def __init__(self, user_id: str, email: str | None, claims: dict):
         self.id = user_id
         self.email = email
         self.claims = claims
@@ -50,7 +49,7 @@ def _decode(token: str) -> dict:
 
 
 async def get_current_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
 ) -> CurrentUser:
     """Dependency for protected routes. Raises 401 when absent/invalid."""
     if credentials is None or not credentials.credentials:
@@ -69,8 +68,8 @@ async def get_current_user(
 
 
 async def get_optional_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
-) -> Optional[CurrentUser]:
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+) -> CurrentUser | None:
     """Same as above but returns None instead of raising — for routes that
     work anonymously but personalise when signed in."""
     if credentials is None or not credentials.credentials:
