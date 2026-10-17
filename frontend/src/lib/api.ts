@@ -8,6 +8,8 @@ import type {
   SavedScreen,
   ScreenRunResponse,
   SearchHistoryEntry,
+  HistoryRange,
+  PriceHistory,
   SearchResponse,
   StockDetail,
   Criterion,
@@ -93,6 +95,13 @@ export const api = {
     request<SearchResponse>(`/api/stocks/search?q=${encodeURIComponent(q)}`, {
       auth: true,
     }),
+
+  // Named priceHistory, not history: `history` is already the user's search
+  // history further down this object, and a duplicate key silently wins.
+  priceHistory: (symbol: string, range: HistoryRange = "1y") =>
+    request<PriceHistory>(
+      `/api/stocks/${encodeURIComponent(symbol)}/history?range=${range}`
+    ),
 
   stock: (symbol: string) =>
     request<StockDetail>(`/api/stocks/${encodeURIComponent(symbol)}`, {

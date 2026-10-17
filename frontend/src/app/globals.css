@@ -3,6 +3,31 @@
 @tailwind utilities;
 
 @layer base {
+  /* Chart palette. Each set passed the six checks (lightness band, chroma
+     floor, CVD separation, normal-vision floor, contrast) against its own
+     surface -- the dark steps are chosen for the dark surface, not flipped. */
+  :root {
+    --chart-price: #625bff;
+    --chart-sma50: #d97706;
+    --chart-sma200: #0d9488;
+    --chart-grid: #e6e8ef;
+    --chart-axis: #64748b;
+    --chart-crosshair: #94a3b8;
+    --chart-volume: #cbd5e1;
+    --chart-surface: #ffffff;
+  }
+
+  .dark {
+    --chart-price: #6f68e8;
+    --chart-sma50: #c47a05;
+    --chart-sma200: #0f9e92;
+    --chart-grid: #262c3a;
+    --chart-axis: #94a3b8;
+    --chart-crosshair: #64748b;
+    --chart-volume: #334155;
+    --chart-surface: #171a23;
+  }
+
   html {
     -webkit-text-size-adjust: 100%;
   }

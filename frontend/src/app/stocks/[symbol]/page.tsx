@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { useAuth } from "@/components/AuthProvider";
+import PriceChart from "@/components/PriceChart";
 import SearchBar from "@/components/SearchBar";
 import { api, ApiError } from "@/lib/api";
 import {
@@ -255,6 +256,9 @@ export default function StockPage() {
           )}
         </p>
       </div>
+
+      {/* ---------------- price chart ---------------- */}
+      <PriceChart symbol={symbol} currencySymbol={cs} />
 
       {/* ---------------- fundamentals ---------------- */}
       {data.overview ? (

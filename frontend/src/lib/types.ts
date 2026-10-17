@@ -121,7 +121,11 @@ export interface ScreenResultRow {
 export interface ScreenRunResponse {
   criteria: Criterion[];
   evaluated: number;
+  /** Total companies passing the criteria. */
   matched: number;
+  /** How many of them are in `results` (the page). */
+  returned?: number;
+  truncated?: boolean;
   partial: boolean;
   message?: string | null;
   results: ScreenResultRow[];
@@ -151,4 +155,27 @@ export interface Profile {
   display_name?: string | null;
   avatar_url?: string | null;
   created_at?: string | null;
+}
+
+export type HistoryRange = "1m" | "6m" | "1y" | "3y" | "5y" | "10y" | "max";
+
+export interface Candle {
+  t: string;
+  o?: number | null;
+  h?: number | null;
+  l?: number | null;
+  c?: number | null;
+  v: number;
+}
+
+export interface PriceHistory {
+  symbol: string;
+  currency?: string | null;
+  currency_symbol: string;
+  range: string;
+  interval: string;
+  candles: Candle[];
+  sma_50: (number | null)[];
+  sma_200: (number | null)[];
+  cached: boolean;
 }
