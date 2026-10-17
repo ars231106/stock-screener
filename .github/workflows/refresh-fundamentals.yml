@@ -1,0 +1,60 @@
+name: Refresh fundamentals
+
+# Why this runs here and not on the API server:
+#
+#   Yahoo refuses its fundamentals endpoint from some datacenter IP ranges,
+#   Render's among them, so the API server cannot fetch this data at all.
+#   Beyond that, precomputing fundamentals is what turns a screen from
+#   O(universe) upstream calls into a single SQL query.
+#
+# The API server only ever reads the table this job writes.
+
+on:
+  schedule:
+    # 02:30 UTC == 08:00 IST, after US markets close and before the
+    # Indian market opens, so both sets of figures are settled.
+    - cron: "30 2 * * *"
+  workflow_dispatch:
+    inputs:
+      refresh_all:
+        description: "Refresh every symbol instead of only stale ones"
+        type: boolean
+        default: false
+      seed:
+        description: "Seed the universe table first"
+        type: boolean
+        default: false
+
+concurrency:
+  group: refresh-fundamentals
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt
+
+      - name: Refresh fundamentals
+        working-directory: backend
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          ALPHA_VANTAGE_KEY: ${{ secrets.ALPHA_VANTAGE_KEY }}
+          MARKET_DATA_PROVIDERS: yahoo
+        run: |
+          python -m jobs.refresh_fundamentals \
+            --concurrency 4 \
+            ${{ inputs.seed && '--seed' || '' }} \
+            ${{ inputs.refresh_all && '--all' || '' }}
