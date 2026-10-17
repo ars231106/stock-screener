@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend — lint, types, tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Lint (ruff)
+        run: ruff check app jobs tests
+
+      - name: Type check (mypy)
+        run: mypy app
+
+      - name: Tests
+        # The suite never reaches the network: Supabase and the market data
+        # providers are faked, so a red build means our code changed
+        # behaviour, not that a vendor had a bad day.
+        env:
+          SUPABASE_URL: https://test.supabase.co
+          SUPABASE_SERVICE_KEY: test-service-key
+          SUPABASE_JWT_SECRET: test-jwt-secret-for-signing-only
+          MARKET_DATA_PROVIDERS: yahoo
+        run: pytest --cov=app --cov-report=term-missing --cov-fail-under=55
+
+  frontend:
+    name: Frontend — types, lint, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Build
+        # Placeholder values: the build only needs these to exist, and
+        # baking real ones into CI logs would leak them.
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-key
+          NEXT_PUBLIC_API_URL: https://example.invalid
+        run: npm run build
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      # Advisory only. This exists because a Next.js CVE silently blocked a
+      # production deploy once; surfacing it here means we find out on a PR
+      # rather than at deploy time.
+      - name: npm audit
+        working-directory: frontend
+        run: npm audit --audit-level=high || true

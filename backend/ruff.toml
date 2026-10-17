@@ -1,0 +1,16 @@
+line-length = 100
+target-version = "py311"
+
+[lint]
+select = ["E", "F", "W", "I", "B", "UP", "C4", "SIM"]
+ignore = [
+  "E501",  # line length is handled by the formatter
+  "B008",  # FastAPI's Depends() in defaults is the documented pattern
+  "UP017", # datetime.UTC is 3.11+; keep the suite runnable on 3.10 locally
+]
+
+[lint.per-file-ignores]
+"tests/*" = ["B011", "C408"]
+# `l` is the low in OHLCV. Renaming it would change the wire format the
+# frontend chart reads, which is not worth it to satisfy a style rule.
+"app/schemas.py" = ["E741"]
