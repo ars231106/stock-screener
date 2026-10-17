@@ -169,6 +169,23 @@ async def run_screen(
         )
         query = query.in_("symbol", [r["symbol"] for r in universe])
 
+    # Count every match first, then fetch one page of them. Without this,
+    # `matched` would report the page size -- a screen with 60 matches and a
+    # limit of 25 would claim "25 matches", which reads as a complete answer
+    # rather than a truncated one.
+    matched_total = None
+    try:
+        count_query = sb.table("fundamentals").select("symbol", count="exact")
+        for criterion in criteria:
+            count_query = _apply(count_query, criterion)
+        if symbols:
+            count_query = count_query.in_(
+                "symbol", [s.strip().upper() for s in symbols if s.strip()]
+            )
+        matched_total = count_query.limit(1).execute().count
+    except Exception as exc:
+        log.warning("match count failed, falling back to page size: %s", exc)
+
     try:
         rows = query.limit(max(1, min(limit, 200))).execute().data or []
     except Exception as exc:
@@ -204,10 +221,13 @@ async def run_screen(
         )
 
     results.sort(key=lambda r: r["symbol"])
+    matched = matched_total if matched_total is not None else len(results)
     return {
         "criteria": criteria,
         "evaluated": total,
-        "matched": len(results),
+        "matched": matched,
+        "returned": len(results),
+        "truncated": matched > len(results),
         "partial": False,
         "message": None,
         "results": results,

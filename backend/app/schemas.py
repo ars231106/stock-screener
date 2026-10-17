@@ -148,7 +148,9 @@ class ScreenResultRow(BaseModel):
 class ScreenRunResponse(BaseModel):
     criteria: List[Criterion] = []
     evaluated: int = 0
-    matched: int = 0
+    matched: int = 0          # total passing the criteria
+    returned: int = 0         # how many are in `results` (page size)
+    truncated: bool = False   # matched > returned
     partial: bool = False
     message: Optional[str] = None
     results: List[ScreenResultRow] = []
@@ -174,3 +176,27 @@ class Profile(BaseModel):
 class ProfileUpdate(BaseModel):
     username: Optional[str] = Field(default=None, max_length=40)
     display_name: Optional[str] = Field(default=None, max_length=80)
+
+
+# --------------------------- price history -------------------------------
+class Candle(BaseModel):
+    t: str                      # ISO date
+    o: Optional[float] = None
+    h: Optional[float] = None
+    l: Optional[float] = None
+    c: Optional[float] = None
+    v: int = 0
+
+
+class PriceHistory(BaseModel):
+    symbol: str
+    currency: Optional[str] = None
+    currency_symbol: str = ""
+    range: str
+    interval: str
+    candles: List[Candle] = []
+    # Simple moving averages, aligned index-for-index with `candles`;
+    # None until enough history exists to fill the window.
+    sma_50: List[Optional[float]] = []
+    sma_200: List[Optional[float]] = []
+    cached: bool = False
