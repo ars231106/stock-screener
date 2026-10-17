@@ -334,6 +334,9 @@ export default function ScreensPage() {
               {results.matched} match{results.matched === 1 ? "" : "es"}
             </h2>
             <p className="muted">
+              {results.truncated
+                ? `showing top ${results.returned} of ${results.matched} · `
+                : ""}
               {results.evaluated} companies evaluated
             </p>
           </div>
