@@ -12,8 +12,9 @@ development work before the table has ever been seeded.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
+from app.core.db import first as db_first
 from app.core.supabase_client import get_supabase
 from app.services import market_data
 from app.services.market_data import MarketDataError
@@ -29,7 +30,7 @@ COLUMNS = (
 )
 
 
-def get_stored(symbol: str) -> Optional[Dict[str, Any]]:
+def get_stored(symbol: str) -> dict[str, Any] | None:
     """Fundamentals for one symbol from the table, or None."""
     sb = get_supabase()
     if sb is None:
@@ -42,11 +43,10 @@ def get_stored(symbol: str) -> Optional[Dict[str, Any]]:
     except Exception as exc:
         log.warning("fundamentals lookup failed for %s: %s", symbol, exc)
         return None
-    rows = res.data or []
-    return rows[0] if rows else None
+    return db_first(res)
 
 
-async def get_overview(symbol: str) -> Optional[Dict[str, Any]]:
+async def get_overview(symbol: str) -> dict[str, Any] | None:
     """Stored fundamentals, falling back to a live provider fetch.
 
     Returns None rather than raising: a stock page without fundamentals is

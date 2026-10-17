@@ -16,10 +16,12 @@ so the second person to look up a ticker pays nothing for it.
 from __future__ import annotations
 
 import logging
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta, timezone
-from typing import Any, Awaitable, Callable, Dict, List, Optional
+from typing import Any
 
 from app.core.config import settings
+from app.core.db import first as db_first
 from app.core.supabase_client import get_supabase
 from app.providers.base import ProviderError, RateLimitError
 from app.providers.registry import get_provider_chain
@@ -46,7 +48,7 @@ CURRENCY_SYMBOLS = {
 }
 
 
-def currency_symbol(code: Optional[str]) -> str:
+def currency_symbol(code: str | None) -> str:
     if not code:
         return ""
     return CURRENCY_SYMBOLS.get(code.upper(), code.upper())
@@ -65,7 +67,7 @@ def _is_fresh(fetched_at: str, ttl_seconds: int) -> bool:
     return datetime.now(timezone.utc) - ts < timedelta(seconds=ttl_seconds)
 
 
-def _cache_get(table: str, key_col: str, key: str, ttl: int) -> Optional[dict]:
+def _cache_get(table: str, key_col: str, key: str, ttl: int) -> dict | None:
     sb = get_supabase()
     if sb is None:
         return None
@@ -77,13 +79,14 @@ def _cache_get(table: str, key_col: str, key: str, ttl: int) -> Optional[dict]:
     except Exception as exc:
         log.warning("cache read failed for %s/%s: %s", table, key, exc)
         return None
-    rows = res.data or []
-    if not rows or not _is_fresh(rows[0].get("fetched_at", ""), ttl):
+    row = db_first(res)
+    if row is None or not _is_fresh(str(row.get("fetched_at", "")), ttl):
         return None
-    return rows[0].get("payload")
+    payload = row.get("payload")
+    return payload if isinstance(payload, dict) else None
 
 
-def _cache_get_stale(table: str, key_col: str, key: str) -> Optional[dict]:
+def _cache_get_stale(table: str, key_col: str, key: str) -> dict | None:
     """Ignores the TTL. Used only when every provider has failed."""
     sb = get_supabase()
     if sb is None:
@@ -92,8 +95,11 @@ def _cache_get_stale(table: str, key_col: str, key: str) -> Optional[dict]:
         res = sb.table(table).select("payload").eq(key_col, key).limit(1).execute()
     except Exception:
         return None
-    rows = res.data or []
-    return rows[0].get("payload") if rows else None
+    row = db_first(res)
+    if row is None:
+        return None
+    payload = row.get("payload")
+    return payload if isinstance(payload, dict) else None
 
 
 def _cache_put(table: str, key_col: str, key: str, payload: Any) -> None:
@@ -145,7 +151,7 @@ async def _try_providers(
 # --------------------------------------------------------------------------
 # Public API
 # --------------------------------------------------------------------------
-async def search_symbols(query: str) -> List[Dict[str, Any]]:
+async def search_symbols(query: str) -> list[dict[str, Any]]:
     key = query.strip().lower()
     if not key:
         return []
@@ -166,7 +172,7 @@ async def search_symbols(query: str) -> List[Dict[str, Any]]:
     return matches
 
 
-async def get_quote(symbol: str) -> Dict[str, Any]:
+async def get_quote(symbol: str) -> dict[str, Any]:
     key = symbol.strip().upper()
     if not key:
         raise ProviderError("Symbol is required")
@@ -187,7 +193,7 @@ async def get_quote(symbol: str) -> Dict[str, Any]:
     return {**quote, "cached": False}
 
 
-async def get_overview(symbol: str) -> Dict[str, Any]:
+async def get_overview(symbol: str) -> dict[str, Any]:
     key = symbol.strip().upper()
     cache_key = f"overview:{key}"
 
@@ -207,15 +213,15 @@ async def get_overview(symbol: str) -> Dict[str, Any]:
     return {**overview, "cached": False}
 
 
-def _sma(values: List[Optional[float]], window: int) -> List[Optional[float]]:
+def _sma(values: list[float | None], window: int) -> list[float | None]:
     """Simple moving average, returned index-aligned with `values`.
 
     Entries before the window is full are None rather than a partial average,
     so a 200-day line does not start with a meaningless 3-day mean.
     """
-    out: List[Optional[float]] = []
+    out: list[float | None] = []
     running = 0.0
-    buf: List[float] = []
+    buf: list[float] = []
     for v in values:
         if v is None:
             out.append(None)
@@ -228,7 +234,7 @@ def _sma(values: List[Optional[float]], window: int) -> List[Optional[float]]:
     return out
 
 
-async def get_history(symbol: str, range_: str = "1y") -> Dict[str, Any]:
+async def get_history(symbol: str, range_: str = "1y") -> dict[str, Any]:
     """Price history plus moving averages, cached per symbol+range.
 
     The TTL is short for intraday-relevant ranges and long for multi-year

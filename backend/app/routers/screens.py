@@ -1,7 +1,8 @@
-from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.core.db import first as db_first
+from app.core.db import rows as db_rows
 from app.core.security import CurrentUser, get_current_user
 from app.core.supabase_client import require_supabase
 from app.schemas import (
@@ -71,7 +72,7 @@ async def run_custom(payload: ScreenRunRequest):
 
 
 # ----------------------------- saved screens ------------------------------
-@router.get("/saved", response_model=List[SavedScreen])
+@router.get("/saved", response_model=list[SavedScreen])
 async def list_saved(user: CurrentUser = Depends(get_current_user)):
     sb = require_supabase()
     res = (
@@ -81,7 +82,7 @@ async def list_saved(user: CurrentUser = Depends(get_current_user)):
         .order("created_at", desc=True)
         .execute()
     )
-    return res.data or []
+    return db_rows(res)
 
 
 @router.post("/saved", response_model=SavedScreen, status_code=status.HTTP_201_CREATED)
@@ -102,12 +103,13 @@ async def create_saved(
         )
         .execute()
     )
-    if not res.data:
+    created = db_first(res)
+    if created is None:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Could not save the screen",
         )
-    return res.data[0]
+    return created
 
 
 @router.post("/saved/{screen_id}/run", response_model=ScreenRunResponse)
@@ -123,11 +125,15 @@ async def run_saved(
         .limit(1)
         .execute()
     )
-    if not res.data:
+    row = db_first(res)
+    if row is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Screen not found"
         )
-    return await screener.run_screen(res.data[0].get("criteria") or [], limit=limit)
+    criteria = row.get("criteria")
+    return await screener.run_screen(
+        criteria if isinstance(criteria, list) else [], limit=limit
+    )
 
 
 @router.delete("/saved/{screen_id}", status_code=status.HTTP_204_NO_CONTENT)

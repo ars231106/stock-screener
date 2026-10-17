@@ -1,8 +1,9 @@
 import logging
-from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from app.core.db import first as db_first
+from app.core.db import rows as db_rows
 from app.core.security import CurrentUser, get_current_user
 from app.core.supabase_client import require_supabase
 from app.schemas import WatchlistItem, WatchlistItemCreate, WatchlistItemWithQuote
@@ -24,23 +25,25 @@ def _default_watchlist_id(user: CurrentUser) -> str:
         .limit(1)
         .execute()
     )
-    if res.data:
-        return res.data[0]["id"]
+    existing = db_first(res)
+    if existing is not None:
+        return str(existing["id"])
 
     created = (
         sb.table("watchlists")
         .insert({"user_id": user.id, "name": "My Watchlist", "is_default": True})
         .execute()
     )
-    if not created.data:
+    new_row = db_first(created)
+    if new_row is None:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Could not create a watchlist",
         )
-    return created.data[0]["id"]
+    return str(new_row["id"])
 
 
-@router.get("", response_model=List[WatchlistItemWithQuote])
+@router.get("", response_model=list[WatchlistItemWithQuote])
 async def list_watchlist(
     with_quotes: bool = Query(True, description="Attach a live quote to each row"),
     user: CurrentUser = Depends(get_current_user),
@@ -54,7 +57,7 @@ async def list_watchlist(
         .order("added_at", desc=True)
         .execute()
     )
-    rows = res.data or []
+    rows = db_rows(res)
 
     if not with_quotes:
         return rows
@@ -89,8 +92,9 @@ async def add_to_watchlist(
         .limit(1)
         .execute()
     )
-    if existing.data:
-        return existing.data[0]
+    already = db_first(existing)
+    if already is not None:
+        return already
 
     res = (
         sb.table("watchlist_items")
@@ -107,12 +111,13 @@ async def add_to_watchlist(
         )
         .execute()
     )
-    if not res.data:
+    created_item = db_first(res)
+    if created_item is None:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Could not add to watchlist",
         )
-    return res.data[0]
+    return created_item
 
 
 @router.delete("/{symbol}", status_code=status.HTTP_204_NO_CONTENT)

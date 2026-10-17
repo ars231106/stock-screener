@@ -1,7 +1,8 @@
-from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from app.core.db import first as db_first
+from app.core.db import rows as db_rows
 from app.core.security import CurrentUser, get_current_user
 from app.core.supabase_client import require_supabase
 from app.schemas import Profile, ProfileUpdate, SearchHistoryEntry
@@ -15,7 +16,8 @@ async def get_profile(user: CurrentUser = Depends(get_current_user)):
     database trigger."""
     sb = require_supabase()
     res = sb.table("profiles").select("*").eq("id", user.id).limit(1).execute()
-    if not res.data:
+    existing_profile = db_first(res)
+    if existing_profile is None:
         # Defensive: the trigger should have made this, but a user created
         # before the migration ran would not have one.
         created = (
@@ -29,8 +31,14 @@ async def get_profile(user: CurrentUser = Depends(get_current_user)):
             )
             .execute()
         )
-        return created.data[0]
-    return res.data[0]
+        created_profile = db_first(created)
+        if created_profile is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Could not create a profile",
+            )
+        return created_profile
+    return existing_profile
 
 
 @router.patch("", response_model=Profile)
@@ -44,14 +52,15 @@ async def update_profile(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Nothing to update"
         )
     res = sb.table("profiles").update(updates).eq("id", user.id).execute()
-    if not res.data:
+    existing_profile = db_first(res)
+    if existing_profile is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
         )
     return res.data[0]
 
 
-@router.get("/history", response_model=List[SearchHistoryEntry])
+@router.get("/history", response_model=list[SearchHistoryEntry])
 async def search_history(
     limit: int = Query(20, ge=1, le=100),
     user: CurrentUser = Depends(get_current_user),
@@ -66,7 +75,7 @@ async def search_history(
         .limit(limit)
         .execute()
     )
-    return res.data or []
+    return db_rows(res)
 
 
 @router.delete("/history", status_code=status.HTTP_204_NO_CONTENT)

@@ -62,9 +62,10 @@ async def health():
     """Readiness probe. Render pings this; it also tells you at a glance
     whether the environment variables actually landed."""
     supabase_ok = False
-    if get_supabase() is not None:
+    client = get_supabase()
+    if client is not None:
         try:
-            get_supabase().table("quote_cache").select("symbol").limit(1).execute()
+            client.table("quote_cache").select("symbol").limit(1).execute()
             supabase_ok = True
         except Exception as exc:
             log.warning("supabase health check failed: %s", exc)

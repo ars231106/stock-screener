@@ -19,8 +19,10 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any
 
+from app.core.db import EXACT, count_of
+from app.core.db import rows as db_rows
 from app.core.supabase_client import get_supabase
 from app.services import market_data
 from app.services.market_data import MarketDataError
@@ -28,7 +30,7 @@ from app.services.market_data import MarketDataError
 log = logging.getLogger(__name__)
 
 # Screenable metrics. The key is both the API contract and the column name.
-METRICS: Dict[str, Dict[str, Any]] = {
+METRICS: dict[str, dict[str, Any]] = {
     "pe_ratio": {"label": "P/E Ratio", "unit": "x"},
     "peg_ratio": {"label": "PEG Ratio", "unit": "x"},
     "pb_ratio": {"label": "P/B Ratio", "unit": "x"},
@@ -46,7 +48,7 @@ METRICS: Dict[str, Dict[str, Any]] = {
 
 SELECT_COLUMNS = "symbol, name, sector, currency, " + ", ".join(METRICS)
 
-PRESET_SCREENS: Dict[str, Dict[str, Any]] = {
+PRESET_SCREENS: dict[str, dict[str, Any]] = {
     "growth": {
         "name": "Growth Stocks",
         "description": "Above-average revenue and earnings growth with strong returns on equity.",
@@ -88,7 +90,7 @@ PRESET_SCREENS: Dict[str, Dict[str, Any]] = {
 _PG_OP = {"gt": "gt", "gte": "gte", "lt": "lt", "lte": "lte", "eq": "eq"}
 
 
-def _apply(query, criterion: Dict[str, Any]):
+def _apply(query, criterion: dict[str, Any]):
     """Translate one criterion into a PostgREST predicate.
 
     `not_("col", "is", "null")` is what enforces exclude-on-missing: without
@@ -108,7 +110,7 @@ def _apply(query, criterion: Dict[str, Any]):
         upper = criterion.get("value2")
         if upper is None:
             raise ValueError("'between' needs both value and value2")
-        lo, hi = sorted((float(value), float(upper)))
+        lo, hi = sorted((float(value or 0), float(upper)))
         return query.gte(metric, lo).lte(metric, hi)
 
     pg_op = _PG_OP.get(op)
@@ -118,11 +120,11 @@ def _apply(query, criterion: Dict[str, Any]):
 
 
 async def run_screen(
-    criteria: List[Dict[str, Any]],
-    symbols: Optional[List[str]] = None,
+    criteria: list[dict[str, Any]],
+    symbols: list[str] | None = None,
     limit: int = 25,
-    market: Optional[str] = None,
-) -> Dict[str, Any]:
+    market: str | None = None,
+) -> dict[str, Any]:
     """Evaluate `criteria` against the stored fundamentals."""
     sb = get_supabase()
     if sb is None:
@@ -132,9 +134,8 @@ async def run_screen(
         }
 
     try:
-        total = (
-            sb.table("fundamentals").select("symbol", count="exact")
-            .limit(1).execute().count or 0
+        total = count_of(
+            sb.table("fundamentals").select("symbol", count=EXACT).limit(1).execute()
         )
     except Exception as exc:
         log.warning("could not count fundamentals: %s", exc)
@@ -163,9 +164,9 @@ async def run_screen(
     if symbols:
         query = query.in_("symbol", [s.strip().upper() for s in symbols if s.strip()])
     if market:
-        universe = (
+        universe = db_rows(
             sb.table("universe").select("symbol").eq("market", market.upper())
-            .eq("active", True).execute().data or []
+            .eq("active", True).execute()
         )
         query = query.in_("symbol", [r["symbol"] for r in universe])
 
@@ -175,19 +176,19 @@ async def run_screen(
     # rather than a truncated one.
     matched_total = None
     try:
-        count_query = sb.table("fundamentals").select("symbol", count="exact")
+        count_query = sb.table("fundamentals").select("symbol", count=EXACT)
         for criterion in criteria:
             count_query = _apply(count_query, criterion)
         if symbols:
             count_query = count_query.in_(
                 "symbol", [s.strip().upper() for s in symbols if s.strip()]
             )
-        matched_total = count_query.limit(1).execute().count
+        matched_total = count_of(count_query.limit(1).execute())
     except Exception as exc:
         log.warning("match count failed, falling back to page size: %s", exc)
 
     try:
-        rows = query.limit(max(1, min(limit, 200))).execute().data or []
+        result_rows = db_rows(query.limit(max(1, min(limit, 200))).execute())
     except Exception as exc:
         log.exception("screen query failed")
         return {
@@ -197,7 +198,7 @@ async def run_screen(
 
     metrics_used = [c["metric"] for c in criteria if c.get("metric") in METRICS]
     results = []
-    for row in rows:
+    for row in result_rows:
         # Quotes are cheap and cached; a failure here must not drop the row.
         price = None
         change_percent = None
@@ -239,31 +240,29 @@ def universe_size() -> int:
     if sb is None:
         return 0
     try:
-        return (
-            sb.table("fundamentals").select("symbol", count="exact")
-            .limit(1).execute().count or 0
+        return count_of(
+            sb.table("fundamentals").select("symbol", count=EXACT).limit(1).execute()
         )
     except Exception:
         return 0
 
 
-def coverage() -> Dict[str, Any]:
+def coverage() -> dict[str, Any]:
     """How complete and how fresh the fundamentals table is."""
     sb = get_supabase()
     if sb is None:
         return {"symbols": 0, "oldest_update": None}
     try:
-        rows = (
+        oldest = db_rows(
             sb.table("fundamentals").select("updated_at")
-            .order("updated_at", desc=False).limit(1).execute().data or []
+            .order("updated_at", desc=False).limit(1).execute()
         )
-        count = (
-            sb.table("fundamentals").select("symbol", count="exact")
-            .limit(1).execute().count or 0
+        count = count_of(
+            sb.table("fundamentals").select("symbol", count=EXACT).limit(1).execute()
         )
         return {
             "symbols": count,
-            "oldest_update": rows[0]["updated_at"] if rows else None,
+            "oldest_update": oldest[0].get("updated_at") if oldest else None,
             "as_of": datetime.now(timezone.utc).isoformat(),
         }
     except Exception:

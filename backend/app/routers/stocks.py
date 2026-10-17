@@ -1,8 +1,8 @@
 import logging
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from app.core.db import first as db_first
 from app.core.security import CurrentUser, get_optional_user
 from app.core.supabase_client import get_supabase
 from app.schemas import Overview, PriceHistory, Quote, SearchResponse, StockDetail
@@ -29,7 +29,7 @@ def _upstream_error(exc: Exception) -> HTTPException:
 
 
 def _record_search(
-    user: Optional[CurrentUser], query: str, symbol: Optional[str], name: Optional[str]
+    user: CurrentUser | None, query: str, symbol: str | None, name: str | None
 ) -> None:
     if user is None:
         return
@@ -52,19 +52,21 @@ def _record_search(
 @router.get("/search", response_model=SearchResponse)
 async def search(
     q: str = Query(min_length=1, max_length=80, description="Company name or ticker"),
-    user: Optional[CurrentUser] = Depends(get_optional_user),
+    user: CurrentUser | None = Depends(get_optional_user),
 ):
     """Search for companies by name or ticker symbol."""
     try:
         matches = await market_data.search_symbols(q)
     except MarketDataError as exc:
-        raise _upstream_error(exc)
+        raise _upstream_error(exc) from exc
 
     if matches:
         top = matches[0]
         _record_search(user, q, top.get("symbol"), top.get("name"))
 
-    return SearchResponse(query=q, matches=matches)
+    # Validate rather than trust: the provider layer returns plain dicts and
+    # this is the boundary where they become part of our API contract.
+    return SearchResponse.model_validate({"query": q, "matches": matches})
 
 
 @router.get("/{symbol}/quote", response_model=Quote)
@@ -73,7 +75,7 @@ async def quote(symbol: str):
     try:
         return await market_data.get_quote(symbol)
     except MarketDataError as exc:
-        raise _upstream_error(exc)
+        raise _upstream_error(exc) from exc
 
 
 @router.get("/{symbol}/overview", response_model=Overview)
@@ -82,7 +84,7 @@ async def overview(symbol: str):
     try:
         return await market_data.get_overview(symbol)
     except MarketDataError as exc:
-        raise _upstream_error(exc)
+        raise _upstream_error(exc) from exc
 
 
 @router.get("/{symbol}/history", response_model=PriceHistory)
@@ -98,13 +100,13 @@ async def history(
     try:
         return await market_data.get_history(symbol, range)
     except MarketDataError as exc:
-        raise _upstream_error(exc)
+        raise _upstream_error(exc) from exc
 
 
 @router.get("/{symbol}", response_model=StockDetail)
 async def detail(
     symbol: str,
-    user: Optional[CurrentUser] = Depends(get_optional_user),
+    user: CurrentUser | None = Depends(get_optional_user),
 ):
     """Everything the stock detail page needs in a single round-trip:
     quote, fundamentals where available, and whether this ticker is already
@@ -114,7 +116,7 @@ async def detail(
     try:
         quote_data = await market_data.get_quote(sym)
     except MarketDataError as exc:
-        raise _upstream_error(exc)
+        raise _upstream_error(exc) from exc
 
     # Fundamentals come from the stored table, which the scheduled refresh
     # job populates. The API server cannot fetch them live on Render --
@@ -152,17 +154,19 @@ async def detail(
                 .limit(1)
                 .execute()
             )
-            in_watchlist = bool(res.data)
+            in_watchlist = db_first(res) is not None
         except Exception as exc:
             log.warning("watchlist lookup failed: %s", exc)
 
-    return StockDetail(
-        symbol=sym,
-        name=name,
-        region=region,
-        currency=currency,
-        currency_symbol=market_data.currency_symbol(currency),
-        quote=quote_data,
-        overview=overview_data,
-        in_watchlist=in_watchlist,
+    return StockDetail.model_validate(
+        {
+            "symbol": sym,
+            "name": name,
+            "region": region,
+            "currency": currency,
+            "currency_symbol": market_data.currency_symbol(currency),
+            "quote": quote_data,
+            "overview": overview_data,
+            "in_watchlist": in_watchlist,
+        }
     )
